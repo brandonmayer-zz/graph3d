@@ -1,5 +1,5 @@
 function lidx(i, j, k, ni , nj){
-    // Returns linear index where loop order (outer to inner) is k, i, j
+    // Returns linear index where loop order (outer to inner) is k, j, i
     return (ni*nj*k) + ni*j + i;
 }
 
@@ -14,13 +14,13 @@ function coord(idx,ni,nj){
     return result;
 }
 
-function main(){
 
+
+function main(){
     var scene    = new THREE.Scene();
     var cam      = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     var renderer = new THREE.WebGLRenderer({alpha: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
-
 
     controls = new THREE.TrackballControls(cam);
     controls.rotateSpeed = 0.5;
@@ -38,22 +38,40 @@ function main(){
     var geometry = new THREE.SphereGeometry(0.25, 32, 32);
 
     var material = new THREE.MeshBasicMaterial({color: 0xff0000});
-    draw_node(0,0,0); draw_node(1,0,0); draw_node(0,1,0);
 
-    var nodes = []
-    
+    var graph = new Graph();
+    var ni = 5, nj = 5, nk = 5;
     var cnt = 0;
-    for(var i = 5; i < 7; i++)
-	for(var j = 5; j < 7; j++)
-	    for(var k = 5; k < 7; k++, cnt++){
-		var node = new Node;
+    for(var k = 0; k < nk; ++k)
+	for(var j = 0; j < nj; ++j)
+	    for(var i = 0; i < ni; ++i){
+		var node = new Node(cnt);
 		node.position.x = i;
 		node.position.y = j;
 		node.position.z = k;
-		nodes.push(node)
+		graph.addNode(node);
 		drawNode(node);
 	    }
 
+    
+    var n1 = graph.getNode(0);
+    var n2 = graph.getNode(1);
+    log_position(n1); 
+    // log_position(n2);
+    // log_position(n2);
+    // drawEdge(n1, n2);
+    // cnt = 0
+    // for(var k = 1; k < nk; ++k)
+    // 	for(var j = 1; j < nj; ++j)
+    // 	    for(var i = 1; i < ni; ++i){
+    // 		var itarget = lidx(i,j,k,ni,nj);
+    // 		var iup = lidx(i,j+1,k,ni,nj);
+    // 		target = graph.getNode(itarget);
+    // 		up = graph.getNode(iup);
+    // 		drawEdge(target,up);
+		
+		
+    // 	    }
 
 
     function drawNode(node){
@@ -67,34 +85,33 @@ function main(){
 	node.data.draw_object = draw_object
 	scene.add(draw_object);
     }
-    
-
+  
     function drawEdge(source, target){
 	var draw_object = 
 	    new THREE.LineBasicMaterial(
 		{color:0xff0000, opacity: 1, linewidth: 0.5});
 
 	var tmp_geo = new THREE.Geometry();
-	tmp_geo.verticies.push(source.data.draw_object.position);
-	tmp_geo.verticies.push(target.data.draw_object.position);
+	tmp_geo.vertices.push(source.data.draw_object.position);
+	tmp_geo.vertices.push(target.data.draw_object.position);
 
 	line = new THREE.Line(tmp_geo, material, THREE.LinePieces);
 	line.scale.x = line.scale.y = line.scale.z = 1;
 	line.originalScale = 1;
 	
-	// geometries.push(tmp_geo);
 	scene.add(line);
     }
-    function draw_node(x, y, z, idx){
-	var node_obj = new THREE.Mesh(geometry, material);
-	node_obj.position.x = x
-	node_obj.position.y = y
-	node_obj.position.z = z;
-	scene.add(node_obj);
-    }
 
-    // function draw_edge(){
-    // }
+    function log_position(node){
+
+	var str = "node = {";
+	// str += node.position.x.toString() + ", ";
+	// str += node.position.y.toString() + ", ";
+	// str += node.position.z.toString() + "}";
+	console.log(node.position.x.toString());
+	
+	console.log(str);
+    }
 
     document.body.appendChild(renderer.domElement);
     animate();
