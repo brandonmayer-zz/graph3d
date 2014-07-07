@@ -54,9 +54,9 @@ function main(){
 	    }
 
     
-    var n1 = graph.getNode(0);
-    var n2 = graph.getNode(1);
-    log_position(n1); 
+    // var n1 = graph.getNode(0);
+    // var n2 = graph.getNode(1);
+    // log_position(n1); 
     // log_position(n2);
     // log_position(n2);
     // drawEdge(n1, n2);
@@ -86,21 +86,21 @@ function main(){
 	scene.add(draw_object);
     }
   
-    function drawEdge(source, target){
-	var draw_object = 
-	    new THREE.LineBasicMaterial(
-		{color:0xff0000, opacity: 1, linewidth: 0.5});
+    // function drawEdge(source, target){
+    // 	var draw_object = 
+    // 	    new THREE.LineBasicMaterial(
+    // 		{color:0xff0000, opacity: 1, linewidth: 0.5});
 
-	var tmp_geo = new THREE.Geometry();
-	tmp_geo.vertices.push(source.data.draw_object.position);
-	tmp_geo.vertices.push(target.data.draw_object.position);
+    // 	var tmp_geo = new THREE.Geometry();
+    // 	tmp_geo.vertices.push(source.data.draw_object.position);
+    // 	tmp_geo.vertices.push(target.data.draw_object.position);
 
-	line = new THREE.Line(tmp_geo, material, THREE.LinePieces);
-	line.scale.x = line.scale.y = line.scale.z = 1;
-	line.originalScale = 1;
+    // 	line = new THREE.Line(tmp_geo, material, THREE.LinePieces);
+    // 	line.scale.x = line.scale.y = line.scale.z = 1;
+    // 	line.originalScale = 1;
 	
-	scene.add(line);
-    }
+    // 	scene.add(line);
+    // }
 
     function log_position(node){
 
