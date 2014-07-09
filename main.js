@@ -9,8 +9,8 @@ function coord(idx,ni,nj){
     var N = ni*nj;
     var lmod = idx % N;
     result.push(lmod % ni);
-    result.push(lmod / ni);
-    result.push(idx / N);
+    result.push(Math.floor(lmod / ni));
+    result.push(Math.floor(idx / N));
     return result;
 }
 
