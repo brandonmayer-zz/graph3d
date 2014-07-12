@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Graph3d</title>
+
+    <style>canvas {width: 100%, height: 100%}</style>
+
+    <script type="text/javascript" src="http://threejs.org/build/three.min.js"></script>
+    <script type="text/javascript" src="TrackballControls.js"></script>
+    <script type="text/javascript" src="Graph.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript">
+
+    </script>
+
+  </head>
+  <body>
+    <script type="text/javascript">
+      var scene    = new THREE.Scene();
+      var cam      = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      var renderer = new THREE.WebGLRenderer({alpha: true});
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      controls = new THREE.TrackballControls(cam);
+      controls.rotateSpeed = 0.5;
+      controls.zoomSpeed = 5.2;
+      controls.panSpeed = 1;
+      controls.noZoom = false;
+      controls.noPan = false;
+      controls.staticMoving = false;
+      controls.dynamicDampingFactor = 0.3;
+      controls.keys = [ 65, 83, 68 ];
+      cam.position.z = 25;
+      controls.addEventListener('change', render);
+
+      var geometry = new THREE.SphereGeometry(0.25, 32, 32);
+
+      var material = new THREE.MeshBasicMaterial({color: 0xff0000});
+
+      var tscale = 0.25;
+
+      document.body.appendChild(renderer.domElement);
+      animate();
+      
+      function animate(){
+	  requestAnimationFrame(animate);
+	  controls.update();
+	  render();	
+      }
+      
+      
+      function render(){
+	  renderer.render(scene, cam);
+      }
+      render();
+
+      function drawNode(node){
+	  var draw_object = 
+	      new THREE.Mesh(
+		  geometry, 
+		  new THREE.MeshBasicMaterial({color: 0x009ACD}));
+	  draw_object.position.x = node.position.x;
+	  draw_object.position.y = node.position.y;
+	  draw_object.position.z = node.position.z;
+	  node.data.draw_object = draw_object
+	  scene.add(draw_object);
+      }
+      
+      function drawEdge(source, target){
+	  var draw_object = 
+	      new THREE.LineBasicMaterial(
+		  {color:0xff0000, opacity: 1, linewidth: 0.5});
+	  
+	  var tmp_geo = new THREE.Geometry();
+	  tmp_geo.vertices.push(source.data.draw_object.position);
+	  tmp_geo.vertices.push(target.data.draw_object.position);
+	  
+	  line = new THREE.Line(tmp_geo, material, THREE.LinePieces);
+	  line.scale.x = line.scale.y = line.scale.z = 1;
+	  line.originalScale = 1;
+	  
+	  scene.add(line);
+      }
+
+      function load_graph(files){
+
+	  console.log("Loading Graph.");
+
+	  var file = files[0];
+
+	  var reader = new FileReader();
+
+	  var graph = new Graph();
+
+	  reader.onload = function(e){
+	      console.log("Reading Data");
+	      var data = JSON.parse(e.target.result);
+	      var nodes = data["nodes"];
+	      console.log(nodes["0"].position.toString())
+	      for(node in nodes){
+		  
+		  console.log(nodes[node].position)
+		  var node_obj = new Node(node);
+		  node_obj.position = nodes[node].position;
+		  if(graph.addNode(node_obj))
+		      drawNode(node_obj);
+	      }
+	      console.log("done drawing");
+	  }
+	  
+	  reader.readAsText(file);
+      }
+    </script>
+    <form>
+      <input type="file" id="graph_file" name="graph" onchange="load_graph(this.files)">
+    </form>
+    <!-- <canvas id="graph_canvas" width=window.innerWidth height=window.innerHeight</canvas> -->
+  </body>
+</html>
