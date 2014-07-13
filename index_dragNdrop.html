@@ -9,9 +9,10 @@
     <script type="text/javascript" src="TrackballControls.js"></script>
     <script type="text/javascript" src="Graph.js"></script>
     <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="stats.min.js"></script>
     <script type="text/javascript">
-      var scene, cam, main_canvas, renderer, 
-      controls, geometry, material, tscale = 0.25;
+      var container, scene, cam, main_canvas, renderer, 
+      controls, geometry, material, tscale, stats;
 
       function drawNode(node){
 	  var draw_object = 
@@ -45,7 +46,6 @@
 	  
 	  console.log("Loading Graph.");
 
-
 	  scene    = new THREE.Scene();
 	  var graph = new Graph();
 
@@ -57,20 +57,57 @@
 	      var data = JSON.parse(e.target.result);
 	      var nodes = data["nodes"];
 	      var edges = data["edges"];
-	      // console.log(nodes["0"].position.toString())
+
+	      var xmin = Number.MAX_VALUE, ymin = Number.MAX_VALUE, zmin = Number.MAX_VALUE,
+	      xmax = Number.MIN_VALUE, ymax = Number.MIN_VALUE, zmax = Number.MIN_VALUE;
+	      //center the data
 	      for(node in nodes){
+		  // var node_obj = new Node(node);
+
+		  // node_obj.position.x = nodes[node].position[0];
+		  // node_obj.position.y = nodes[node].position[1];
+		  // node_obj.position.z = nodes[node].position[2]*tscale;
+
+		  if(nodes[node].position[0] < xmin)
+		      xmin = nodes[node].position[0];
+		  if(nodes[node].position[0] > xmax)
+		      xmax = nodes[node].position[0];
 		  
-		  console.log(nodes[node].position)
-		  var node_obj = new Node(node);
-		  // node_obj.position = nodes[node].position;
-		  node_obj.position.x = nodes[node].position[0];
-		  node_obj.position.y = nodes[node].position[1];
-		  node_obj.position.z = nodes[node].position[2]*tscale;
+		  if(nodes[node].position[1] < ymin)
+		      ymin = nodes[node].position[1];
+		  if(nodes[node].position[1] > ymax)
+		      ymax = nodes[node].position[1];
+
+		  if(nodes[node].position[2] < zmin)
+		      zmin = nodes[node].position[2];
+		  if(nodes[node].position[2] > zmax)
+		      zmax = nodes[node].position[2];    
 		  
-		  if(graph.addNode(node_obj))
-		      drawNode(node_obj);
+		  // if(graph.addNode(node_obj))
+		  //     drawNode(node_obj);
 		  
 	      }
+
+	      var center =[xmin+((xmax-xmin)/2), ymin+((ymax-ymin)/2), zmin+((zmax-zmin)/2)];	      
+	      for(node in nodes){
+		  var node_obj = new Node(node);
+
+		  node_obj.position.x = nodes[node].position[0] - center[0];
+		  node_obj.position.y = nodes[node].position[1] - center[1];
+		  node_obj.position.z = (nodes[node].position[2] - center[2])*tscale;
+		  
+		  if(graph.addNode(node_obj))
+		     drawNode(node_obj);
+	      }
+
+	      cam.position.x = center[0];
+	      cam.position.y = center[1];
+	      cam.position.z = (zmax + 5)*tscale;
+	      cam.lookAt(new THREE.Vector3(center[0], center[1], center[2]));
+	      console.log("Cam Position = " + cam.position.x.toString() +
+	      		  ", " + cam.position.y.toString() + 
+	      		  ", " + cam.position.z.toString());
+	      
 	      
 	      console.log("edges.length() = " + edges.length.toString());
 	      for(edge in edges){
@@ -94,6 +131,7 @@
 	  requestAnimationFrame(animate);
 	  controls.update();
 	  render();	
+	  stats.update();
       }
       
       
@@ -102,11 +140,25 @@
       }
 
       function init_scene(){
+	  container = document.createElement('div');
+	  document.body.appendChild(container);
+
+	  var info = document.createElement('div');
+	  info.style.position = 'absolute';
+	  info.style.top = '10px';
+	  info.style.width = '100%';
+	  info.style.textAlign = 'center';
+	  info.innerHTML = '<p>Drag and drop JSON file to view</p>';
+	  container.appendChild( info );
+
 	  var dropZone = document.getElementById('drop_zone');
+
 	  dropZone.addEventListener('dragover', handleDragOver, false);
 	  dropZone.addEventListener('drop', handleFileSelect, false);
 	  scene    = new THREE.Scene();
 	  cam      = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+	  // cam = new THREE.OrthographicCamera(window.innerWidth/-2,window.innerWidth/2, window.innerHeight/2,1,1000);
+	  // cam =  new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, - 500, 1000 );
 	  
 	  main_canvas = document.getElementById("main_canvas");
 	  renderer = new THREE.WebGLRenderer({canvas:main_canvas, alpha: true});
@@ -130,6 +182,13 @@
 	  material = new THREE.MeshBasicMaterial({color: 0xff0000});
 	  
 	  tscale = 0.25;
+
+	  stats = new Stats();
+	  stats.domElement.style.position='absolute';
+	  stats.domElement.style.top='0px';
+	  container.appendChild(stats.domElement);
+	  
+	  
 	  
 	  animate();	  
 	  
