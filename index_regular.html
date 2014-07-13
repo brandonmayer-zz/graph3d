@@ -47,13 +47,25 @@
 	      }
 
       cnt = 0
-      for(var k=1; k<nk-1; ++k)
-      	for(var j=1; j<nj-1; ++j)
-      	    for(var i=1; i<ni-1; ++i){
-      		var itarget = lidx(i,j,k,ni,nj);
-      		var iup = lidx(i,j+1,k,ni,nj);
-      		target = graph.getNode(itarget);
-      		up = graph.getNode(iup);
+      for(var k=0; k<nk-1; ++k)
+      	for(var j=0; j<nj-1; ++j)
+      	    for(var i=0; i<ni-1; ++i){
+		var itarget = lidx(i,j,k,ni,nj);
+
+		if(i > 0 && i < (ni-1)){
+		    var ileft = lidx(i-1,j,k,ni,nj)
+		    left = graph.getNode(ileft);
+		    if(graph.addEdge(target,left))
+			drawEdge(target,left);		    
+		}
+		else if(i == 0){
+		    
+		}
+		else if(i == (ni-1)){
+		}
+		var iup = lidx(i,j+1,k,ni,nj);
+		target = graph.getNode(itarget);
+		up = graph.getNode(iup);
 		if(graph.addEdge(target,up))
 		    drawEdge(target,up);
 
@@ -62,10 +74,7 @@
 		if(graph.addEdge(target, down))
 		    drawEdge(target,down);
 		
-		var ileft = lidx(i-1,j,k,ni,nj)
-		left = graph.getNode(ileft);
-		if(graph.addEdge(target,left))
-		   drawEdge(target,left);
+
 
 		var iright = lidx(i+1,j,k,ni,nj)
 		right = graph.getNode(iright);
