@@ -3,44 +3,15 @@
   <head>
     <title>Graph3d</title>
 
-    <!-- <style>canvas{width: 100%, height: 100%}</style> -->
+    <style>canvas{width: 100%, height: 100%}</style>
 
     <script type="text/javascript" src="http://threejs.org/build/three.min.js"></script>
     <script type="text/javascript" src="TrackballControls.js"></script>
     <script type="text/javascript" src="Graph.js"></script>
     <script type="text/javascript" src="main.js"></script>
-  </head>
-  <body>
     <script type="text/javascript">
-      var scene    = new THREE.Scene();
-      var cam      = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      var main_canvas = document.getElementById("main_canvas");
-      var renderer = new THREE.WebGLRenderer({canvas:main_canvas, alpha: true});
-      renderer.setSize(window.innerWidth, window.innerHeight);
-
-      var controls = new THREE.TrackballControls(cam);
-      controls.rotateSpeed = 0.5;
-      controls.zoomSpeed = 5.2;
-      controls.panSpeed = 1;
-      controls.noZoom = false;
-      controls.noPan = false;
-      controls.staticMoving = false;
-      controls.dynamicDampingFactor = 0.3;
-      controls.keys = [ 65, 83, 68 ];
-      cam.position.z = 25;
-      controls.addEventListener('change', render);
-
-      var geometry = new THREE.SphereGeometry(0.25, 32, 32);
-
-      var material = new THREE.MeshBasicMaterial({color: 0xff0000});
-
-      var tscale = 0.25;
-
-      // document.body.appendChild(renderer.domElement);
-
-      animate();
-      
-
+      var scene, cam, main_canvas, renderer, 
+      controls, geometry, material, tscale = 0.25;
 
       function drawNode(node){
 	  var draw_object = 
@@ -71,15 +42,16 @@
       }
 
       function load_graph(files){
-
+	  
 	  console.log("Loading Graph.");
 
-	  var file = files[0];
 
-	  var reader = new FileReader();
-
+	  scene    = new THREE.Scene();
 	  var graph = new Graph();
 
+	  var file = files[0];	  
+	  var reader = new FileReader();
+	  
 	  reader.onload = function(e){
 	      console.log("Reading Data");
 	      var data = JSON.parse(e.target.result);
@@ -97,15 +69,15 @@
 		  
 		  if(graph.addNode(node_obj))
 		      drawNode(node_obj);
-		      
+		  
 	      }
-
+	      
 	      console.log("edges.length() = " + edges.length.toString());
 	      for(edge in edges){
 		  v0 = edges[edge][0];
 		  v1 = edges[edge][1];
 		  console.log(v0.toString() + "---" + v1.toString())
-
+		  
 		  node0 = graph.getNode(v0);
 		  node1 = graph.getNode(v1);
 		  if(graph.addEdge(node0, node1))
@@ -128,13 +100,49 @@
       function render(){
 	  renderer.render(scene, cam);
       }
-      render();
+
+      function init_scene(){
+	  scene    = new THREE.Scene();
+	  cam      = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+	  
+	  main_canvas = document.getElementById("main_canvas");
+	  renderer = new THREE.WebGLRenderer({canvas:main_canvas, alpha: true});
+	  
+	  renderer.setSize(window.innerWidth, window.innerHeight);
+	  
+	  controls = new THREE.TrackballControls(cam);
+	  controls.rotateSpeed = 0.5;
+	  controls.zoomSpeed = 5.2;
+	  controls.panSpeed = 1;
+	  controls.noZoom = false;
+	  controls.noPan = false;
+	  controls.staticMoving = false;
+	  controls.dynamicDampingFactor = 0.3;
+	  controls.keys = [ 65, 83, 68 ];
+	  cam.position.z = 25;
+	  controls.addEventListener('change', render);
+	  
+	  geometry = new THREE.SphereGeometry(0.25, 32, 32);
+	  
+	  material = new THREE.MeshBasicMaterial({color: 0xff0000});
+	  
+	  tscale = 0.25;
+	  
+	  animate();	  
+	  
+	  render();
+      }
     </script>
+
+  </head>
+  <body onload="init_scene()">
+    <script>
+    </script>
+
     <form>
       <input type="file" id="graph_file" name="graph" onchange="load_graph(this.files)">
     </form>
 
-    <div id="main_canvas">
-    </div>
+    <canvas id="main_canvas"></canvas>
   </body>
 </html>
