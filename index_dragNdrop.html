@@ -151,8 +151,14 @@
 	  info.innerHTML = '<p>Drag and drop JSON file to view</p>';
 	  container.appendChild( info );
 
-	  var dropZone = document.getElementById('drop_zone');
+	  stats = new Stats();
+	  stats.domElement.style.position='absolute';
+	  stats.domElement.style.top='0px';
+	  container.appendChild(stats.domElement);
 
+	  window.addEventListener( 'resize', onWindowResize, false );
+
+	  var dropZone = document.getElementById('drop_zone');
 	  dropZone.addEventListener('dragover', handleDragOver, false);
 	  dropZone.addEventListener('drop', handleFileSelect, false);
 	  scene    = new THREE.Scene();
@@ -181,15 +187,8 @@
 	  
 	  material = new THREE.MeshBasicMaterial({color: 0xff0000});
 	  
-	  tscale = 0.25;
+	  tscale = 0.1;
 
-	  stats = new Stats();
-	  stats.domElement.style.position='absolute';
-	  stats.domElement.style.top='0px';
-	  container.appendChild(stats.domElement);
-	  
-	  
-	  
 	  animate();	  
 	  
 	  render();
@@ -207,6 +206,17 @@
 	  evt.stopPropagation();
 	  evt.preventDefault();
 	  evt.dataTransfer.dropEffect = 'copy';
+      }
+
+      function onWindowResize(){
+	  cam.left = window.innerWidth/-2;
+	  cam.right= window.innerWidth/2;
+	  cam.top=window.innerHeight/2;
+	  cam.bottom=window.innerHeight/-2;
+
+	  cam.updateProjectionMatrix();
+	  
+	  renderer.setSize(window.innerWidth, window.innerHeight);
       }
     </script>
 
