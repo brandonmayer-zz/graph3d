@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Graph3d</title>
+
+    <style>canvas{width: 100%, height: 100%}</style>
+
+    <script type="text/javascript" src="http://threejs.org/build/three.min.js"></script>
+    <script type="text/javascript" src="TrackballControls.js"></script>
+    <script type="text/javascript" src="Graph.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="stats.min.js"></script>
+    <script type="text/javascript">
+      var container, scene, cam, main_canvas, renderer, 
+      controls, geometry, material, tscale, stats;
+
+      function drawNode(node){
+	  var draw_object = 
+	      new THREE.Mesh(
+		  geometry, 
+		  new THREE.MeshBasicMaterial({color: 0x009ACD}));
+	  draw_object.position.x = node.position.x;
+	  draw_object.position.y = node.position.y;
+	  draw_object.position.z = node.position.z;
+	  node.data.draw_object = draw_object;
+	  scene.add(draw_object);
+      }
+      
+      function drawEdge(source, target){
+	  var draw_object = 
+	      new THREE.LineBasicMaterial(
+		  {color:0xff0000, opacity: 1, linewidth: 0.5});
+	  
+	  var tmp_geo = new THREE.Geometry();
+	  tmp_geo.vertices.push(source.data.draw_object.position);
+	  tmp_geo.vertices.push(target.data.draw_object.position);
+	  
+	  line = new THREE.Line(tmp_geo, material, THREE.LinePieces);
+	  line.scale.x = line.scale.y = line.scale.z = 1;
+	  line.originalScale = 1;
+	  
+	  scene.add(line);
+      }
+
+      function load_graph(files){
+	  
+	  console.log("Loading Graph.");
+
+	  scene    = new THREE.Scene();
+	  var graph = new Graph();
+
+	  var file = files[0];	  
+	  var reader = new FileReader();
+	  
+	  reader.onload = function(e){
+	      console.log("Reading Data");
+	      var data = JSON.parse(e.target.result);
+	      var nodes = data["nodes"];
+	      var edges = data["edges"];
+
+	      var xmin = Number.MAX_VALUE, ymin = Number.MAX_VALUE, zmin = Number.MAX_VALUE,
+	      xmax = Number.MIN_VALUE, ymax = Number.MIN_VALUE, zmax = Number.MIN_VALUE;
+	      //center the data
+	      for(node in nodes){
+		  // var node_obj = new Node(node);
+
+		  // node_obj.position.x = nodes[node].position[0];
+		  // node_obj.position.y = nodes[node].position[1];
+		  // node_obj.position.z = nodes[node].position[2]*tscale;
+
+		  if(nodes[node].position[0] < xmin)
+		      xmin = nodes[node].position[0];
+		  if(nodes[node].position[0] > xmax)
+		      xmax = nodes[node].position[0];
+		  
+		  if(nodes[node].position[1] < ymin)
+		      ymin = nodes[node].position[1];
+		  if(nodes[node].position[1] > ymax)
+		      ymax = nodes[node].position[1];
+
+		  if(nodes[node].position[2] < zmin)
+		      zmin = nodes[node].position[2];
+		  if(nodes[node].position[2] > zmax)
+		      zmax = nodes[node].position[2];    
+		  
+		  // if(graph.addNode(node_obj))
+		  //     drawNode(node_obj);
+		  
+	      }
+
+	      var center =[xmin+((xmax-xmin)/2), ymin+((ymax-ymin)/2), zmin+((zmax-zmin)/2)];	      
+	      for(node in nodes){
+		  var node_obj = new Node(node);
+
+		  node_obj.position.x = nodes[node].position[0] - center[0];
+		  node_obj.position.y = nodes[node].position[1] - center[1];
+		  node_obj.position.z = (nodes[node].position[2] - center[2])*tscale;
+		  
+		  if(graph.addNode(node_obj))
+		     drawNode(node_obj);
+	      }
+
+	      cam.position.x = center[0];
+	      cam.position.y = center[1];
+	      cam.position.z = (zmax + 5)*tscale;
+	      cam.lookAt(new THREE.Vector3(center[0], center[1], center[2]));
+	      console.log("Cam Position = " + cam.position.x.toString() +
+	      		  ", " + cam.position.y.toString() + 
+	      		  ", " + cam.position.z.toString());
+	      
+	      
+	      console.log("edges.length() = " + edges.length.toString());
+	      for(edge in edges){
+		  v0 = edges[edge][0];
+		  v1 = edges[edge][1];
+		  // console.log(v0.toString() + "---" + v1.toString())
+		  
+		  node0 = graph.getNode(v0);
+		  node1 = graph.getNode(v1);
+		  if(graph.addEdge(node0, node1))
+		      drawEdge(node0, node1);
+	      }
+	      console.log("done drawing");
+	      animate();
+	  }
+	  
+	  reader.readAsText(file);
+      }
+
+      function animate(){
+	  requestAnimationFrame(animate);
+	  controls.update();
+	  render();	
+	  stats.update();
+      }
+      
+      
+      function render(){
+	  renderer.render(scene, cam);
+      }
+
+      function init_scene(){
+	  container = document.createElement('div');
+	  document.body.appendChild(container);
+
+	  var info = document.createElement('div');
+	  info.style.position = 'absolute';
+	  info.style.top = '10px';
+	  info.style.width = '100%';
+	  info.style.textAlign = 'center';
+	  info.innerHTML = '<p>Drag and drop JSON file to view</p>';
+	  container.appendChild( info );
+
+	  stats = new Stats();
+	  stats.domElement.style.position='absolute';
+	  stats.domElement.style.top='0px';
+	  container.appendChild(stats.domElement);
+
+	  window.addEventListener( 'resize', onWindowResize, false );
+
+	  var dropZone = document.getElementById('drop_zone');
+	  dropZone.addEventListener('dragover', handleDragOver, false);
+	  dropZone.addEventListener('drop', handleFileSelect, false);
+	  scene    = new THREE.Scene();
+	  cam      = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+	  // cam = new THREE.OrthographicCamera(window.innerWidth/-2,window.innerWidth/2, window.innerHeight/2,1,1000);
+	  // cam =  new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, - 500, 1000 );
+	  
+	  main_canvas = document.getElementById("main_canvas");
+	  renderer = new THREE.WebGLRenderer({canvas:main_canvas, alpha: true});
+	  
+	  renderer.setSize(window.innerWidth, window.innerHeight);
+	  
+	  controls = new THREE.TrackballControls(cam);
+	  controls.rotateSpeed = 0.5;
+	  controls.zoomSpeed = 5.2;
+	  controls.panSpeed = 1;
+	  controls.noZoom = false;
+	  controls.noPan = false;
+	  controls.staticMoving = false;
+	  controls.dynamicDampingFactor = 0.3;
+	  controls.keys = [ 65, 83, 68 ];
+	  cam.position.z = 25;
+	  controls.addEventListener('change', render);
+	  
+	  geometry = new THREE.SphereGeometry(0.25, 32, 32);
+	  
+	  material = new THREE.MeshBasicMaterial({color: 0xff0000});
+	  
+	  tscale = 0.1;
+
+	  animate();	  
+	  
+	  render();
+      }
+
+      function handleFileSelect(evt){
+	  evt.stopPropagation();
+	  evt.preventDefault();
+	  // var file = evt.dataTransfer.files[0];
+	  load_graph(evt.dataTransfer.files);
+	  
+      }
+
+      function handleDragOver(evt){
+	  evt.stopPropagation();
+	  evt.preventDefault();
+	  evt.dataTransfer.dropEffect = 'copy';
+      }
+
+      function onWindowResize(){
+	  cam.left = window.innerWidth/-2;
+	  cam.right= window.innerWidth/2;
+	  cam.top=window.innerHeight/2;
+	  cam.bottom=window.innerHeight/-2;
+
+	  cam.updateProjectionMatrix();
+	  
+	  renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+    </script>
+
+  </head>
+  <body onload="init_scene()">
+    <div id="drop_zone">
+      <canvas id="main_canvas"></canvas>
+    </div>
+  </body>
+</html>
